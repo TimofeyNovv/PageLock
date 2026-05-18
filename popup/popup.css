@@ -1,0 +1,92 @@
+body {
+  background: #f9fafb;
+  color: #111827;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  min-width: 300px;
+}
+
+.popup {
+  box-sizing: border-box;
+  padding: 16px;
+}
+
+h1 {
+  font-size: 20px;
+  line-height: 1.2;
+  margin: 0 0 10px;
+}
+
+.site {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  overflow-wrap: anywhere;
+}
+
+.status,
+.message {
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.35;
+  margin: 0 0 12px;
+  min-height: 18px;
+}
+
+.actions {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 9px 10px;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+#add-button,
+#submit-button {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+#remove-button {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.password-form {
+  border-top: 1px solid #e5e7eb;
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+}
+
+.password-form[hidden] {
+  display: none;
+}
+
+label {
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+input {
+  border: 1px solid #9ca3af;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 14px;
+  padding: 9px 10px;
+  width: 100%;
+}

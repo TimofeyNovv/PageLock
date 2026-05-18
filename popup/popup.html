@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PageLock</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup">
+      <h1>PageLock</h1>
+      <p id="site" class="site">Загрузка...</p>
+      <p id="status" class="status"></p>
+
+      <div class="actions">
+        <button id="add-button" type="button">Добавить в черный список</button>
+        <button id="remove-button" type="button">Удалить из черного списка</button>
+      </div>
+
+      <form id="password-form" class="password-form" hidden>
+        <label id="password-label" for="password-input">Пароль</label>
+        <input id="password-input" type="password" autocomplete="current-password" required>
+        <button id="submit-button" type="submit">Сохранить</button>
+      </form>
+
+      <p id="message" class="message" aria-live="polite"></p>
+    </main>
+
+    <script src="../shared/browser-api.js"></script>
+    <script src="../shared/site.js"></script>
+    <script src="../shared/crypto.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

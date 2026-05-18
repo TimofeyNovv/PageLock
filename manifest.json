@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "PageLock",
+  "version": "0.1.0",
+  "description": "Locks selected websites with a per-site password.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "icons": {
+    "48": "icons/pagelock.svg",
+    "96": "icons/pagelock.svg"
+  },
+  "action": {
+    "default_title": "PageLock",
+    "default_popup": "popup/popup.html",
+    "default_icon": "icons/pagelock.svg"
+  },
+  "background": {
+    "scripts": ["background/service-worker.js"],
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "shared/browser-api.js",
+        "shared/site.js",
+        "shared/crypto.js",
+        "content/content.js"
+      ],
+      "css": ["content/lock-screen.css"],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "pagelock@example.com",
+      "strict_min_version": "121.0"
+    }
+  }
+}

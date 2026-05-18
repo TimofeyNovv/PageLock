@@ -1,0 +1,84 @@
+html.pagelock-locked,
+html.pagelock-locked body {
+  overflow: hidden !important;
+}
+
+#pagelock-overlay {
+  align-items: center;
+  background: #111827;
+  box-sizing: border-box;
+  color: #f9fafb;
+  display: flex;
+  font-family: Arial, sans-serif;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 2147483647;
+}
+
+#pagelock-panel {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  color: #111827;
+  max-width: 360px;
+  padding: 24px;
+  width: calc(100% - 32px);
+}
+
+#pagelock-panel h1 {
+  font-size: 22px;
+  line-height: 1.25;
+  margin: 0 0 8px;
+}
+
+#pagelock-panel p {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0 0 16px;
+}
+
+#pagelock-panel label {
+  color: #374151;
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+#pagelock-panel input {
+  border: 1px solid #9ca3af;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 15px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+#pagelock-panel button {
+  background: #2563eb;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  margin-top: 12px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+#pagelock-panel button:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+#pagelock-error {
+  color: #b91c1c;
+  font-size: 13px;
+  min-height: 18px;
+  margin-top: 10px;
+}
