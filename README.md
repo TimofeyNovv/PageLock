@@ -1,41 +1,32 @@
-# PageLock
+<p align="center">
+  <img src="icons/pagelock.svg" width="96" height="96" alt="PageLock icon">
+</p>
 
-PageLock is a small browser extension for locking selected websites with a separate password for each site.
+<h1 align="center">PageLock</h1>
 
-## Run in Firefox
+<p align="center">
+  <img src="https://img.shields.io/badge/Firefox%20Add--ons-coming%20soon-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white" alt="Firefox Add-ons coming soon">
+</p>
 
-1. Open `about:debugging#/runtime/this-firefox`.
-2. Click `Load Temporary Add-on`.
-3. Select `manifest.json` from this folder.
-4. Open any website and click the PageLock extension icon.
+<p align="center">
+  A small browser extension for locking distracting websites with a separate code for each site.
+</p>
 
-Temporary Firefox add-ons are removed after browser restart. Later, the extension can be packaged for GitHub releases.
+---
 
-## Run in Chrome or Edge
+## About
 
-1. Open `chrome://extensions` or `edge://extensions`.
-2. Enable developer mode.
-3. Click `Load unpacked`.
-4. Select this project folder.
+PageLock helps you reduce impulsive visits to distracting websites. Add a domain to the blacklist, set a PageLock code, and the extension will cover the site with a lock screen until the correct code is entered.
 
-## Project Structure
+You can also permanently allow a specific page inside a blocked domain. For example, if `twitch.tv` is blocked, `twitch.tv/nix` can be added as an exception while the rest of the domain stays locked.
 
-```text
-PageLock/
-  manifest.json
-  background/
-    service-worker.js
-  content/
-    content.js
-    lock-screen.css
-  icons/
-    pagelock.svg
-  popup/
-    popup.html
-    popup.css
-    popup.js
-  shared/
-    browser-api.js
-    crypto.js
-    site.js
-```
+## Stack
+
+<p>
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=111111" alt="JavaScript">
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=ffffff" alt="HTML5">
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=ffffff" alt="CSS3">
+  <img src="https://img.shields.io/badge/WebExtensions-2B6CB0?style=for-the-badge&logo=firefoxbrowser&logoColor=ffffff" alt="WebExtensions">
+  <img src="https://img.shields.io/badge/Manifest%20V3-111827?style=for-the-badge&logo=googlechrome&logoColor=ffffff" alt="Manifest V3">
+  <img src="https://img.shields.io/badge/Web%20Crypto%20API-059669?style=for-the-badge&logo=letsencrypt&logoColor=ffffff" alt="Web Crypto API">
+</p>
