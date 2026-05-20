@@ -58,6 +58,35 @@ html.pagelock-locked body {
   width: 100%;
 }
 
+#pagelock-password-row {
+  align-items: stretch;
+  display: flex;
+  gap: 8px;
+}
+
+#pagelock-password-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+#pagelock-password-row .pagelock-password-toggle {
+  align-items: center;
+  background: #e5e7eb;
+  color: #111827;
+  display: flex;
+  flex: 0 0 44px;
+  justify-content: center;
+  margin-top: 0;
+  padding: 0;
+  width: 44px;
+}
+
+#pagelock-password-row .pagelock-password-toggle svg {
+  height: 20px;
+  pointer-events: none;
+  width: 20px;
+}
+
 #pagelock-panel button {
   background: #2563eb;
   border: 0;

@@ -90,3 +90,31 @@ input {
   padding: 9px 10px;
   width: 100%;
 }
+
+.password-input-row {
+  align-items: stretch;
+  display: flex;
+  gap: 6px;
+}
+
+.password-input-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.password-toggle {
+  align-items: center;
+  background: #e5e7eb;
+  color: #111827;
+  display: flex;
+  flex: 0 0 40px;
+  justify-content: center;
+  padding: 0;
+  width: 40px;
+}
+
+.password-toggle svg {
+  height: 18px;
+  pointer-events: none;
+  width: 18px;
+}

@@ -9,6 +9,7 @@ const elements = {
   form: document.getElementById("password-form"),
   label: document.getElementById("password-label"),
   input: document.getElementById("password-input"),
+  toggleButton: document.getElementById("toggle-password-button"),
   submitButton: document.getElementById("submit-button")
 };
 
@@ -16,6 +17,185 @@ let activeTab = null;
 let activeSiteKey = null;
 let blockedSites = {};
 let formMode = null;
+let passwordInput = null;
+
+function createManualPasswordInput(input, toggleButton, messageElement) {
+  const state = { value: "", visible: false };
+  const maskCharacter = "•";
+  const blockedEvents = ["paste", "drop", "contextmenu", "copy", "cut"];
+
+  function render(selectionStart = state.value.length, selectionEnd = selectionStart) {
+    input.value = state.visible ? state.value : maskCharacter.repeat(state.value.length);
+
+    try {
+      input.setSelectionRange(selectionStart, selectionEnd);
+    } catch (error) {
+      // Some browsers can reject selection changes while the popup is closing.
+    }
+  }
+
+  function setVisible(visible) {
+    state.visible = visible;
+    toggleButton.setAttribute("aria-pressed", String(visible));
+    toggleButton.setAttribute("aria-label", visible ? "Скрыть пароль" : "Показать пароль");
+    toggleButton.title = visible ? "Скрыть пароль" : "Показать пароль";
+    render(input.selectionStart || state.value.length, input.selectionEnd || state.value.length);
+    input.focus();
+  }
+
+  function replaceSelection(text) {
+    const start = input.selectionStart ?? state.value.length;
+    const end = input.selectionEnd ?? start;
+
+    state.value = state.value.slice(0, start) + text + state.value.slice(end);
+    render(start + text.length);
+  }
+
+  function removeSelection(direction) {
+    const start = input.selectionStart ?? state.value.length;
+    const end = input.selectionEnd ?? start;
+
+    if (start !== end) {
+      state.value = state.value.slice(0, start) + state.value.slice(end);
+      render(start);
+      return;
+    }
+
+    if (direction === "backward" && start > 0) {
+      state.value = state.value.slice(0, start - 1) + state.value.slice(start);
+      render(start - 1);
+    }
+
+    if (direction === "forward" && start < state.value.length) {
+      state.value = state.value.slice(0, start) + state.value.slice(start + 1);
+      render(start);
+    }
+  }
+
+  function rejectAutomaticInput(event) {
+    event.preventDefault();
+    messageElement.textContent = "Пароль нужно ввести вручную.";
+    render();
+  }
+
+  input.type = "text";
+  input.name = "pagelock-" + (crypto.randomUUID ? crypto.randomUUID() : Date.now());
+  input.autocomplete = "one-time-code";
+  input.inputMode = "text";
+  input.setAttribute("aria-autocomplete", "none");
+  input.setAttribute("autocapitalize", "off");
+  input.setAttribute("autocorrect", "off");
+  input.spellcheck = false;
+  input.setAttribute("data-lpignore", "true");
+  input.setAttribute("data-1p-ignore", "true");
+  input.setAttribute("data-bwignore", "true");
+  input.setAttribute("data-form-type", "other");
+  input.setAttribute("readonly", "readonly");
+
+  input.addEventListener("pointerdown", () => {
+    input.removeAttribute("readonly");
+  });
+
+  input.addEventListener("focus", () => {
+    input.removeAttribute("readonly");
+    render(input.selectionStart || state.value.length, input.selectionEnd || state.value.length);
+  });
+
+  for (const eventName of blockedEvents) {
+    input.addEventListener(eventName, rejectAutomaticInput);
+  }
+
+  input.addEventListener("beforeinput", (event) => {
+    if (event.inputType === "insertText" && typeof event.data === "string") {
+      event.preventDefault();
+      replaceSelection(event.data);
+      return;
+    }
+
+    if (event.inputType === "deleteContentBackward") {
+      event.preventDefault();
+      removeSelection("backward");
+      return;
+    }
+
+    if (event.inputType === "deleteContentForward") {
+      event.preventDefault();
+      removeSelection("forward");
+      return;
+    }
+
+    if (event.inputType && event.inputType !== "historyUndo" && event.inputType !== "historyRedo") {
+      rejectAutomaticInput(event);
+    }
+  });
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      return;
+    }
+
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a") {
+      return;
+    }
+
+    if (event.key === "Backspace") {
+      event.preventDefault();
+      removeSelection("backward");
+      return;
+    }
+
+    if (event.key === "Delete") {
+      event.preventDefault();
+      removeSelection("forward");
+      return;
+    }
+
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+      replaceSelection(event.key);
+      return;
+    }
+
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v") {
+      rejectAutomaticInput(event);
+    }
+  });
+
+  input.addEventListener("input", () => render());
+  input.addEventListener("change", () => render());
+  toggleButton.addEventListener("click", () => setVisible(!state.visible));
+
+  const scrubTimer = setInterval(() => {
+    if (!input.isConnected) {
+      clearInterval(scrubTimer);
+      return;
+    }
+
+    const expectedValue = state.visible ? state.value : maskCharacter.repeat(state.value.length);
+
+    if (input.value !== expectedValue) {
+      render(Math.min(input.selectionStart || state.value.length, state.value.length));
+    }
+  }, 250);
+
+  return {
+    clear() {
+      state.value = "";
+      state.visible = false;
+      toggleButton.setAttribute("aria-pressed", "false");
+      toggleButton.setAttribute("aria-label", "Показать пароль");
+      toggleButton.title = "Показать пароль";
+      render(0);
+    },
+    focus() {
+      input.removeAttribute("readonly");
+      input.focus();
+    },
+    getValue() {
+      return state.value;
+    }
+  };
+}
 
 async function getActiveTab() {
   const tabs = await api.tabs.query({ active: true, currentWindow: true });
@@ -58,18 +238,18 @@ function renderState() {
 function showForm(mode) {
   formMode = mode;
   elements.form.hidden = false;
-  elements.input.value = "";
+  passwordInput.clear();
   elements.message.textContent = "";
 
   if (mode === "add") {
-    elements.label.textContent = "Новый пароль для сайта";
+    elements.label.textContent = "Новый код PageLock для сайта";
     elements.submitButton.textContent = "Добавить";
   } else {
-    elements.label.textContent = "Пароль для удаления сайта";
+    elements.label.textContent = "Код PageLock для удаления сайта";
     elements.submitButton.textContent = "Удалить";
   }
 
-  elements.input.focus();
+  passwordInput.focus();
 }
 
 async function notifyActiveTab(message) {
@@ -98,8 +278,8 @@ async function removeSite(password) {
 
   if (!isPasswordValid) {
     elements.message.textContent = "Неверный пароль.";
-    elements.input.value = "";
-    elements.input.focus();
+    passwordInput.clear();
+    passwordInput.focus();
     return;
   }
 
@@ -115,13 +295,12 @@ async function removeSite(password) {
 elements.addButton.addEventListener("click", () => showForm("add"));
 elements.removeButton.addEventListener("click", () => showForm("remove"));
 
-elements.form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const password = elements.input.value;
+async function submitPassword() {
+  const password = passwordInput.getValue();
 
   if (!password) {
     elements.message.textContent = "Введите пароль.";
+    passwordInput.focus();
     return;
   }
 
@@ -139,6 +318,16 @@ elements.form.addEventListener("submit", async (event) => {
   } finally {
     elements.submitButton.disabled = false;
   }
+}
+
+elements.submitButton.addEventListener("click", submitPassword);
+
+elements.input.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    submitPassword();
+  }
 });
 
+passwordInput = createManualPasswordInput(elements.input, elements.toggleButton, elements.message);
 loadState();
