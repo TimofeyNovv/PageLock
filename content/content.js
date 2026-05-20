@@ -1,11 +1,14 @@
 (function () {
+  // Не блокируем iframe: overlay нужен только для основной страницы вкладки.
   if (window.top !== window) {
     return;
   }
 
   const api = globalThis.PageLockApi;
+  // activeLock нужен, чтобы знать, какой overlay сейчас показан и можно ли его убрать.
   let activeLock = null;
 
+  // Убирает экран блокировки и возвращает прокрутку странице.
   function removeOverlay() {
     const overlay = document.getElementById("pagelock-overlay");
 
@@ -17,16 +20,19 @@
     activeLock = null;
   }
 
+  // Добавляет overlay как можно раньше: body может еще не существовать на document_start.
   function appendOverlay(overlay) {
     const parent = document.body || document.documentElement;
     parent.appendChild(overlay);
   }
 
+  // Контролируемое поле кода: реальный ввод хранится в JS, а не в input.value.
   function createManualPasswordInput(input, toggleButton, error) {
     const state = { value: "", visible: false };
     const maskCharacter = "•";
     const blockedEvents = ["paste", "drop", "contextmenu", "copy", "cut"];
 
+    // Перерисовывает поле: либо показывает код, либо заменяет его точками.
     function render(selectionStart = state.value.length, selectionEnd = selectionStart) {
       input.value = state.visible ? state.value : maskCharacter.repeat(state.value.length);
 
@@ -37,6 +43,7 @@
       }
     }
 
+    // Переключает глазок между видимым кодом и скрытым режимом.
     function setVisible(visible) {
       state.visible = visible;
       toggleButton.setAttribute("aria-pressed", String(visible));
@@ -46,6 +53,7 @@
       input.focus();
     }
 
+    // Вставляет вручную набранные символы в наше JS-состояние с учетом выделения.
     function replaceSelection(text) {
       const start = input.selectionStart ?? state.value.length;
       const end = input.selectionEnd ?? start;
@@ -54,6 +62,7 @@
       render(start + text.length);
     }
 
+    // Удаляет символы из JS-состояния, а не из DOM-значения поля.
     function removeSelection(direction) {
       const start = input.selectionStart ?? state.value.length;
       const end = input.selectionEnd ?? start;
@@ -75,12 +84,14 @@
       }
     }
 
+    // Отсекает вставку, drag-and-drop и попытки внешнего автозаполнения.
     function rejectAutomaticInput(event) {
       event.preventDefault();
       error.textContent = "Пароль нужно ввести вручную.";
       render();
     }
 
+    // Это text-поле, чтобы Firefox не распознавал его как пароль от текущего сайта.
     input.type = "text";
     input.name = "pagelock-" + (crypto.randomUUID ? crypto.randomUUID() : Date.now());
     input.autocomplete = "one-time-code";
@@ -168,6 +179,7 @@
     input.addEventListener("change", () => render());
     toggleButton.addEventListener("click", () => setVisible(!state.visible));
 
+    // Если менеджер паролей все же запишет что-то в DOM, возвращаем отображение к нашему состоянию.
     const scrubTimer = setInterval(() => {
       if (!input.isConnected) {
         clearInterval(scrubTimer);
@@ -200,6 +212,7 @@
     };
   }
 
+  // Проверяет код на экране блокировки и временно разблокирует домен в этой вкладке.
   async function submitPassword(passwordInput, button, error, siteKey, record) {
     const password = passwordInput.getValue();
 
@@ -230,6 +243,7 @@
     removeOverlay();
   }
 
+  // Создает полноэкранный UI блокировки поверх сайта.
   function createLockScreen(siteKey, record) {
     removeOverlay();
     activeLock = { siteKey, record };
@@ -305,6 +319,7 @@
     passwordInput.focus();
   }
 
+  // Главная проверка страницы: заблокирована ли она и не является ли endpoint исключением.
   async function checkCurrentPage() {
     const url = new URL(location.href);
 
@@ -330,6 +345,7 @@
     }
   }
 
+  // Popup просит content script перепроверить страницу после изменений в storage.
   api.runtime.onMessage.addListener((message) => {
     if (message.type === "PAGELOCK_RECHECK") {
       checkCurrentPage();

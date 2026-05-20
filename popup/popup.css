@@ -1,3 +1,4 @@
+/* Базовый вид маленького окна расширения. */
 body {
   background: #f9fafb;
   color: #111827;
@@ -17,6 +18,7 @@ h1 {
   margin: 0 0 10px;
 }
 
+/* Текстовые строки с текущим доменом, endpoint и результатами действий. */
 .site {
   color: #374151;
   font-size: 14px;
@@ -35,6 +37,7 @@ h1 {
   min-height: 18px;
 }
 
+/* Группы кнопок: действия с доменом и действия с конкретной страницей. */
 .actions,
 .endpoint-actions {
   display: grid;
@@ -46,6 +49,7 @@ h1 {
   display: none;
 }
 
+/* Общий стиль кнопок popup. */
 button {
   border: 0;
   border-radius: 6px;
@@ -81,6 +85,7 @@ button[hidden] {
   display: none;
 }
 
+/* Скрываемая форма ввода кода PageLock. */
 .password-form {
   border-top: 1px solid #e5e7eb;
   display: grid;
@@ -107,6 +112,7 @@ input {
   width: 100%;
 }
 
+/* Строка ввода кода: поле + кнопка-глазок. */
 .password-input-row {
   align-items: stretch;
   display: flex;

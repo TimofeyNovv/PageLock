@@ -9,20 +9,25 @@
   <body>
     <main class="popup">
       <h1>PageLock</h1>
+
+      <!-- Блок состояния: текущий домен, статус блокировки и конкретный endpoint страницы. -->
       <p id="site" class="site">Загрузка...</p>
       <p id="status" class="status"></p>
       <p id="endpoint" class="endpoint"></p>
 
+      <!-- Основные действия с доменом целиком. -->
       <div class="actions">
         <button id="add-button" type="button">Добавить в черный список</button>
         <button id="remove-button" type="button">Удалить из черного списка</button>
       </div>
 
+      <!-- Действия с текущей страницей внутри уже заблокированного домена. -->
       <div id="endpoint-actions" class="endpoint-actions" hidden>
         <button id="allow-endpoint-button" type="button" hidden>Разблокировать эту страницу навсегда</button>
         <button id="block-endpoint-button" type="button" hidden>Вернуть эту страницу под блокировку</button>
       </div>
 
+      <!-- Единое поле кода PageLock: используется для добавления, удаления и endpoint-исключений. -->
       <div id="password-form" class="password-form" hidden>
         <label id="password-label" for="password-input">Код PageLock</label>
         <div class="password-input-row">
@@ -59,6 +64,7 @@
       <p id="message" class="message" aria-live="polite"></p>
     </main>
 
+    <!-- Порядок скриптов важен: popup.js использует helpers из shared/. -->
     <script src="../shared/browser-api.js"></script>
     <script src="../shared/site.js"></script>
     <script src="../shared/crypto.js"></script>

@@ -1,10 +1,14 @@
 const api = globalThis.browser || globalThis.chrome;
+
+// Хранит разблокированные сайты по tabId, если browser.storage.session недоступен.
 const memoryUnlocks = new Map();
 
+// Делает стабильный ключ для session storage конкретной вкладки.
 function getUnlockKey(tabId) {
   return `pagelock:unlocked:${tabId}`;
 }
 
+// Возвращает список доменов, уже разблокированных в этой вкладке.
 async function getUnlockedSites(tabId) {
   if (api.storage.session) {
     const result = await api.storage.session.get({ [getUnlockKey(tabId)]: [] });
@@ -14,6 +18,7 @@ async function getUnlockedSites(tabId) {
   return memoryUnlocks.get(tabId) || [];
 }
 
+// Сохраняет список разблокированных доменов до закрытия вкладки.
 async function setUnlockedSites(tabId, sites) {
   if (api.storage.session) {
     await api.storage.session.set({ [getUnlockKey(tabId)]: sites });
@@ -23,6 +28,7 @@ async function setUnlockedSites(tabId, sites) {
   memoryUnlocks.set(tabId, sites);
 }
 
+// Добавляет домен в список временно разблокированных для текущей вкладки.
 async function unlockTab(tabId, siteKey) {
   const sites = await getUnlockedSites(tabId);
 
@@ -34,11 +40,13 @@ async function unlockTab(tabId, siteKey) {
   return { ok: true };
 }
 
+// Проверяет, был ли домен уже разблокирован в этой вкладке.
 async function isTabUnlocked(tabId, siteKey) {
   const sites = await getUnlockedSites(tabId);
   return { unlocked: sites.includes(siteKey) };
 }
 
+// Центральная точка обработки сообщений от content script.
 async function handleMessage(message, sender) {
   const tabId = sender.tab && sender.tab.id;
 
@@ -57,6 +65,7 @@ async function handleMessage(message, sender) {
   return { ok: false, error: "Unknown message." };
 }
 
+// WebExtensions требует вернуть true, чтобы ответить асинхронно через sendResponse.
 api.runtime.onMessage.addListener((message, sender, sendResponse) => {
   handleMessage(message, sender)
     .then(sendResponse)
@@ -65,6 +74,7 @@ api.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
+// При закрытии вкладки очищаем временную разблокировку.
 api.tabs.onRemoved.addListener((tabId) => {
   memoryUnlocks.delete(tabId);
 

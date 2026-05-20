@@ -1,5 +1,6 @@
 const api = globalThis.PageLockApi;
 
+// Все элементы popup UI, с которыми работает JavaScript.
 const elements = {
   site: document.getElementById("site"),
   status: document.getElementById("status"),
@@ -17,6 +18,7 @@ const elements = {
   submitButton: document.getElementById("submit-button")
 };
 
+// Состояние текущей вкладки, домена, endpoint и открытого режима формы.
 let activeTab = null;
 let activeSiteKey = null;
 let activeEndpointKey = null;
@@ -25,11 +27,13 @@ let blockedSites = {};
 let formMode = null;
 let passwordInput = null;
 
+// Контролируемое поле кода: реальный ввод хранится в JS, а не в input.value.
 function createManualPasswordInput(input, toggleButton, messageElement) {
   const state = { value: "", visible: false };
   const maskCharacter = "•";
   const blockedEvents = ["paste", "drop", "contextmenu", "copy", "cut"];
 
+  // Перерисовывает поле: либо показывает код, либо заменяет его точками.
   function render(selectionStart = state.value.length, selectionEnd = selectionStart) {
     input.value = state.visible ? state.value : maskCharacter.repeat(state.value.length);
 
@@ -40,6 +44,7 @@ function createManualPasswordInput(input, toggleButton, messageElement) {
     }
   }
 
+  // Переключает глазок между видимым кодом и скрытым режимом.
   function setVisible(visible) {
     state.visible = visible;
     toggleButton.setAttribute("aria-pressed", String(visible));
@@ -49,6 +54,7 @@ function createManualPasswordInput(input, toggleButton, messageElement) {
     input.focus();
   }
 
+  // Вставляет вручную набранные символы в наше JS-состояние с учетом выделения.
   function replaceSelection(text) {
     const start = input.selectionStart ?? state.value.length;
     const end = input.selectionEnd ?? start;
@@ -57,6 +63,7 @@ function createManualPasswordInput(input, toggleButton, messageElement) {
     render(start + text.length);
   }
 
+  // Удаляет символы из JS-состояния, а не из DOM-значения поля.
   function removeSelection(direction) {
     const start = input.selectionStart ?? state.value.length;
     const end = input.selectionEnd ?? start;
@@ -78,12 +85,14 @@ function createManualPasswordInput(input, toggleButton, messageElement) {
     }
   }
 
+  // Отсекает вставку, drag-and-drop и попытки внешнего автозаполнения.
   function rejectAutomaticInput(event) {
     event.preventDefault();
     messageElement.textContent = "Пароль нужно ввести вручную.";
     render();
   }
 
+  // Это text-поле, чтобы Firefox не распознавал его как пароль от текущего сайта.
   input.type = "text";
   input.name = "pagelock-" + (crypto.randomUUID ? crypto.randomUUID() : Date.now());
   input.autocomplete = "one-time-code";
@@ -171,6 +180,7 @@ function createManualPasswordInput(input, toggleButton, messageElement) {
   input.addEventListener("change", () => render());
   toggleButton.addEventListener("click", () => setVisible(!state.visible));
 
+  // Если менеджер паролей все же запишет что-то в DOM, возвращаем отображение к нашему состоянию.
   const scrubTimer = setInterval(() => {
     if (!input.isConnected) {
       clearInterval(scrubTimer);
@@ -203,11 +213,13 @@ function createManualPasswordInput(input, toggleButton, messageElement) {
   };
 }
 
+// Возвращает активную вкладку текущего окна браузера.
 async function getActiveTab() {
   const tabs = await api.tabs.query({ active: true, currentWindow: true });
   return tabs[0] || null;
 }
 
+// Загружает из storage черный список и рассчитывает статус текущей страницы.
 async function loadState() {
   activeTab = await getActiveTab();
 
@@ -234,6 +246,7 @@ async function loadState() {
   renderState();
 }
 
+// Обновляет текст popup и доступность кнопок согласно текущему состоянию.
 function renderState() {
   const isBlocked = Boolean(activeBlockState);
   const isEndpointAllowed = Boolean(activeBlockState && activeBlockState.isEndpointAllowed);
@@ -258,6 +271,7 @@ function renderState() {
   elements.blockEndpointButton.disabled = !activeEndpointKey;
 }
 
+// Открывает форму ввода кода в нужном режиме: добавить, удалить или разрешить endpoint.
 function showForm(mode) {
   formMode = mode;
   elements.form.hidden = false;
@@ -278,6 +292,7 @@ function showForm(mode) {
   passwordInput.focus();
 }
 
+// Отправляет команду content script активной вкладки, если он там доступен.
 async function notifyActiveTab(message) {
   if (!activeTab || !activeTab.id) {
     return;
@@ -290,6 +305,7 @@ async function notifyActiveTab(message) {
   }
 }
 
+// Добавляет текущий домен в черный список с новым кодом PageLock.
 async function addSite(password) {
   const record = await PageLockCrypto.createPasswordRecord(password);
   record.allowedEndpoints = [];
@@ -300,6 +316,7 @@ async function addSite(password) {
   return true;
 }
 
+// Удаляет заблокированный домен после проверки кода PageLock.
 async function removeSite(password) {
   const blockState = PageLockSite.getBlockStateFromUrl(activeTab.url, blockedSites);
 
@@ -328,6 +345,7 @@ async function removeSite(password) {
   return true;
 }
 
+// Добавляет текущую страницу в постоянные исключения внутри заблокированного домена.
 async function allowCurrentEndpoint(password) {
   const blockState = PageLockSite.getBlockStateFromUrl(activeTab.url, blockedSites);
 
@@ -360,6 +378,7 @@ async function allowCurrentEndpoint(password) {
   return true;
 }
 
+// Убирает текущую страницу из исключений; код не нужен, потому что это усиливает блокировку.
 async function blockCurrentEndpoint() {
   elements.form.hidden = true;
   passwordInput.clear();
@@ -386,11 +405,13 @@ async function blockCurrentEndpoint() {
   await loadState();
 }
 
+// Привязка кнопок popup к действиям расширения.
 elements.addButton.addEventListener("click", () => showForm("add"));
 elements.removeButton.addEventListener("click", () => showForm("remove"));
 elements.allowEndpointButton.addEventListener("click", () => showForm("allowEndpoint"));
 elements.blockEndpointButton.addEventListener("click", blockCurrentEndpoint);
 
+// Единая submit-логика для всех режимов формы кода PageLock.
 async function submitPassword() {
   const password = passwordInput.getValue();
 
@@ -431,5 +452,6 @@ elements.input.addEventListener("keydown", (event) => {
   }
 });
 
+// Инициализация контролируемого поля и первичная загрузка состояния popup.
 passwordInput = createManualPasswordInput(elements.input, elements.toggleButton, elements.message);
 loadState();

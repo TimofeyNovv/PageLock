@@ -1,8 +1,10 @@
+/* Когда overlay показан, запрещаем прокрутку заблокированной страницы. */
 html.pagelock-locked,
 html.pagelock-locked body {
   overflow: hidden !important;
 }
 
+/* Полноэкранный слой поверх сайта. */
 #pagelock-overlay {
   align-items: center;
   background: #111827;
@@ -16,6 +18,7 @@ html.pagelock-locked body {
   z-index: 2147483647;
 }
 
+/* Центральная панель с кодом PageLock. */
 #pagelock-panel {
   background: #ffffff;
   border: 1px solid #d1d5db;
@@ -58,6 +61,7 @@ html.pagelock-locked body {
   width: 100%;
 }
 
+/* Строка ввода кода: поле + кнопка-глазок. */
 #pagelock-password-row {
   align-items: stretch;
   display: flex;
@@ -87,6 +91,7 @@ html.pagelock-locked body {
   width: 20px;
 }
 
+/* Основная кнопка разблокировки. */
 #pagelock-panel button {
   background: #2563eb;
   border: 0;
@@ -105,6 +110,7 @@ html.pagelock-locked body {
   opacity: 0.65;
 }
 
+/* Сообщение об ошибке ввода кода. */
 #pagelock-error {
   color: #b91c1c;
   font-size: 13px;
