@@ -110,6 +110,21 @@ html.pagelock-locked body {
   opacity: 0.65;
 }
 
+/* Ссылка на репозиторий проекта под формой блокировки. */
+#pagelock-repository-note {
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.35;
+  margin: 14px 0 0;
+  text-align: center;
+}
+
+#pagelock-repository-note a {
+  color: #2563eb;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 /* Сообщение об ошибке ввода кода. */
 #pagelock-error {
   color: #b91c1c;

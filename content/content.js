@@ -299,7 +299,20 @@
     error.id = "pagelock-error";
     error.setAttribute("aria-live", "polite");
 
-    panel.append(title, text, label, passwordRow, button, error);
+    const repositoryNote = document.createElement("p");
+    repositoryNote.id = "pagelock-repository-note";
+    repositoryNote.textContent = "The project code is located at the ";
+
+    const repositoryLink = document.createElement("a");
+    repositoryLink.href = "https://github.com/TimofeyNovv/PageLock";
+    repositoryLink.target = "_blank";
+    repositoryLink.rel = "noopener noreferrer";
+    repositoryLink.textContent = "link";
+
+    repositoryNote.appendChild(repositoryLink);
+    repositoryNote.append(".");
+
+    panel.append(title, text, label, passwordRow, button, error, repositoryNote);
     overlay.appendChild(panel);
 
     const passwordInput = createManualPasswordInput(input, toggleButton, error);
