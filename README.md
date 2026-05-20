@@ -30,3 +30,8 @@ You can also permanently allow a specific page inside a blocked domain. For exam
   <img src="https://img.shields.io/badge/Manifest%20V3-111827?style=for-the-badge&logo=googlechrome&logoColor=ffffff" alt="Manifest V3">
   <img src="https://img.shields.io/badge/Web%20Crypto%20API-059669?style=for-the-badge&logo=letsencrypt&logoColor=ffffff" alt="Web Crypto API">
 </p>
+
+
+## License
+
+This project is licensed under the GNU General Public License v3.0.
