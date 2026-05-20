@@ -3,7 +3,8 @@
   "name": "PageLock",
   "version": "0.1.0",
   "description": "Locks selected websites with a per-site password.",
-  "permissions": ["storage", "tabs"],
+  "homepage_url": "https://github.com/TimofeyNovv/PageLock",
+  "permissions": ["storage"],
   "host_permissions": ["<all_urls>"],
   "icons": {
     "48": "icons/pagelock.svg",
@@ -15,8 +16,7 @@
     "default_icon": "icons/pagelock.svg"
   },
   "background": {
-    "scripts": ["background/service-worker.js"],
-    "service_worker": "background/service-worker.js"
+    "scripts": ["background/service-worker.js"]
   },
   "content_scripts": [
     {
@@ -33,8 +33,11 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "pagelock@example.com",
-      "strict_min_version": "121.0"
+      "id": "@timofeynovv-pagelock",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   }
 }
