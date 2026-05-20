@@ -3,9 +3,13 @@ const api = globalThis.PageLockApi;
 const elements = {
   site: document.getElementById("site"),
   status: document.getElementById("status"),
+  endpoint: document.getElementById("endpoint"),
+  endpointActions: document.getElementById("endpoint-actions"),
   message: document.getElementById("message"),
   addButton: document.getElementById("add-button"),
   removeButton: document.getElementById("remove-button"),
+  allowEndpointButton: document.getElementById("allow-endpoint-button"),
+  blockEndpointButton: document.getElementById("block-endpoint-button"),
   form: document.getElementById("password-form"),
   label: document.getElementById("password-label"),
   input: document.getElementById("password-input"),
@@ -15,6 +19,8 @@ const elements = {
 
 let activeTab = null;
 let activeSiteKey = null;
+let activeEndpointKey = null;
+let activeBlockState = null;
 let blockedSites = {};
 let formMode = null;
 let passwordInput = null;
@@ -213,6 +219,7 @@ async function loadState() {
   }
 
   activeSiteKey = PageLockSite.getSiteKeyFromUrl(activeTab.url);
+  activeEndpointKey = PageLockSite.getEndpointKeyFromUrl(activeTab.url);
 
   if (!activeSiteKey) {
     elements.site.textContent = "Эту страницу нельзя заблокировать.";
@@ -223,16 +230,32 @@ async function loadState() {
 
   const result = await api.storage.local.get({ blockedSites: {} });
   blockedSites = result.blockedSites;
+  activeBlockState = PageLockSite.getBlockStateFromUrl(activeTab.url, blockedSites);
   renderState();
 }
 
 function renderState() {
-  const isBlocked = Boolean(blockedSites[activeSiteKey]);
+  const isBlocked = Boolean(activeBlockState);
+  const isEndpointAllowed = Boolean(activeBlockState && activeBlockState.isEndpointAllowed);
 
   elements.site.textContent = activeSiteKey;
-  elements.status.textContent = isBlocked ? "Сайт в черном списке." : "Сайт не заблокирован.";
+  elements.endpoint.textContent = activeEndpointKey ? "Страница: " + activeEndpointKey : "";
+
+  if (!isBlocked) {
+    elements.status.textContent = "Сайт не заблокирован.";
+  } else if (isEndpointAllowed) {
+    elements.status.textContent = "Домен " + activeBlockState.siteKey + " заблокирован, но эта страница в исключениях.";
+  } else {
+    elements.status.textContent = "Домен " + activeBlockState.siteKey + " в черном списке.";
+  }
+
   elements.addButton.disabled = isBlocked;
   elements.removeButton.disabled = !isBlocked;
+  elements.endpointActions.hidden = !isBlocked;
+  elements.allowEndpointButton.hidden = !isBlocked || isEndpointAllowed;
+  elements.blockEndpointButton.hidden = !isBlocked || !isEndpointAllowed;
+  elements.allowEndpointButton.disabled = !activeEndpointKey;
+  elements.blockEndpointButton.disabled = !activeEndpointKey;
 }
 
 function showForm(mode) {
@@ -244,6 +267,9 @@ function showForm(mode) {
   if (mode === "add") {
     elements.label.textContent = "Новый код PageLock для сайта";
     elements.submitButton.textContent = "Добавить";
+  } else if (mode === "allowEndpoint") {
+    elements.label.textContent = "Код PageLock для исключения страницы";
+    elements.submitButton.textContent = "Разблокировать страницу";
   } else {
     elements.label.textContent = "Код PageLock для удаления сайта";
     elements.submitButton.textContent = "Удалить";
@@ -266,34 +292,104 @@ async function notifyActiveTab(message) {
 
 async function addSite(password) {
   const record = await PageLockCrypto.createPasswordRecord(password);
+  record.allowedEndpoints = [];
   blockedSites[activeSiteKey] = record;
   await api.storage.local.set({ blockedSites });
   elements.message.textContent = "Сайт добавлен в черный список.";
   await notifyActiveTab({ type: "PAGELOCK_RECHECK" });
+  return true;
 }
 
 async function removeSite(password) {
-  const record = blockedSites[activeSiteKey];
+  const blockState = PageLockSite.getBlockStateFromUrl(activeTab.url, blockedSites);
+
+  if (!blockState) {
+    elements.message.textContent = "Сайт уже не заблокирован.";
+    return false;
+  }
+
+  const record = blockState.record;
   const isPasswordValid = await PageLockCrypto.verifyPassword(password, record);
 
   if (!isPasswordValid) {
-    elements.message.textContent = "Неверный пароль.";
+    elements.message.textContent = "Неверный код PageLock.";
     passwordInput.clear();
     passwordInput.focus();
-    return;
+    return false;
   }
 
-  delete blockedSites[activeSiteKey];
+  delete blockedSites[blockState.siteKey];
   await api.storage.local.set({ blockedSites });
   elements.message.textContent = "Сайт удален из черного списка.";
   await notifyActiveTab({
     type: "PAGELOCK_REMOVE_OVERLAY",
-    siteKey: activeSiteKey
+    siteKey: blockState.siteKey
   });
+  return true;
+}
+
+async function allowCurrentEndpoint(password) {
+  const blockState = PageLockSite.getBlockStateFromUrl(activeTab.url, blockedSites);
+
+  if (!blockState) {
+    elements.message.textContent = "Сначала добавь сайт в черный список.";
+    return false;
+  }
+
+  const isPasswordValid = await PageLockCrypto.verifyPassword(password, blockState.record);
+
+  if (!isPasswordValid) {
+    elements.message.textContent = "Неверный код PageLock.";
+    passwordInput.clear();
+    passwordInput.focus();
+    return false;
+  }
+
+  const allowedEndpoints = PageLockSite.getAllowedEndpoints(blockState.record);
+
+  if (!allowedEndpoints.includes(activeEndpointKey)) {
+    blockedSites[blockState.siteKey] = {
+      ...blockState.record,
+      allowedEndpoints: [...allowedEndpoints, activeEndpointKey]
+    };
+    await api.storage.local.set({ blockedSites });
+  }
+
+  elements.message.textContent = "Эта страница разблокирована навсегда.";
+  await notifyActiveTab({ type: "PAGELOCK_RECHECK" });
+  return true;
+}
+
+async function blockCurrentEndpoint() {
+  elements.form.hidden = true;
+  passwordInput.clear();
+
+  const blockState = PageLockSite.getBlockStateFromUrl(activeTab.url, blockedSites);
+
+  if (!blockState) {
+    elements.message.textContent = "Сайт не заблокирован.";
+    return;
+  }
+
+  const allowedEndpoints = PageLockSite
+    .getAllowedEndpoints(blockState.record)
+    .filter((endpointKey) => endpointKey !== activeEndpointKey);
+
+  blockedSites[blockState.siteKey] = {
+    ...blockState.record,
+    allowedEndpoints
+  };
+
+  await api.storage.local.set({ blockedSites });
+  elements.message.textContent = "Страница снова будет блокироваться.";
+  await notifyActiveTab({ type: "PAGELOCK_RECHECK" });
+  await loadState();
 }
 
 elements.addButton.addEventListener("click", () => showForm("add"));
 elements.removeButton.addEventListener("click", () => showForm("remove"));
+elements.allowEndpointButton.addEventListener("click", () => showForm("allowEndpoint"));
+elements.blockEndpointButton.addEventListener("click", blockCurrentEndpoint);
 
 async function submitPassword() {
   const password = passwordInput.getValue();
@@ -307,14 +403,20 @@ async function submitPassword() {
   elements.submitButton.disabled = true;
 
   try {
+    let didComplete = false;
+
     if (formMode === "add") {
-      await addSite(password);
+      didComplete = await addSite(password);
+    } else if (formMode === "allowEndpoint") {
+      didComplete = await allowCurrentEndpoint(password);
     } else {
-      await removeSite(password);
+      didComplete = await removeSite(password);
     }
 
-    elements.form.hidden = true;
-    await loadState();
+    if (didComplete) {
+      elements.form.hidden = true;
+      await loadState();
+    }
   } finally {
     elements.submitButton.disabled = false;
   }

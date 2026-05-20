@@ -26,6 +26,7 @@ h1 {
 }
 
 .status,
+.endpoint,
 .message {
   color: #4b5563;
   font-size: 13px;
@@ -34,10 +35,15 @@ h1 {
   min-height: 18px;
 }
 
-.actions {
+.actions,
+.endpoint-actions {
   display: grid;
   gap: 8px;
   margin-bottom: 12px;
+}
+
+.endpoint-actions[hidden] {
+  display: none;
 }
 
 button {
@@ -60,9 +66,19 @@ button:disabled {
   color: #ffffff;
 }
 
-#remove-button {
+#remove-button,
+#block-endpoint-button {
   background: #e5e7eb;
   color: #111827;
+}
+
+#allow-endpoint-button {
+  background: #059669;
+  color: #ffffff;
+}
+
+button[hidden] {
+  display: none;
 }
 
 .password-form {

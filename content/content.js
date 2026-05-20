@@ -313,20 +313,20 @@
     }
 
     const result = await api.storage.local.get({ blockedSites: {} });
-    const blockedSite = PageLockSite.findBlockedSite(url.hostname, result.blockedSites);
+    const blockState = PageLockSite.getBlockStateFromUrl(location.href, result.blockedSites);
 
-    if (!blockedSite) {
+    if (!blockState || blockState.isEndpointAllowed) {
       removeOverlay();
       return;
     }
 
     const unlockState = await api.runtime.sendMessage({
       type: "PAGELOCK_IS_UNLOCKED",
-      siteKey: blockedSite.siteKey
+      siteKey: blockState.siteKey
     });
 
     if (!unlockState.unlocked) {
-      createLockScreen(blockedSite.siteKey, blockedSite.record);
+      createLockScreen(blockState.siteKey, blockState.record);
     }
   }
 

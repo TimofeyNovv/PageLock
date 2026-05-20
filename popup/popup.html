@@ -11,10 +11,16 @@
       <h1>PageLock</h1>
       <p id="site" class="site">Загрузка...</p>
       <p id="status" class="status"></p>
+      <p id="endpoint" class="endpoint"></p>
 
       <div class="actions">
         <button id="add-button" type="button">Добавить в черный список</button>
         <button id="remove-button" type="button">Удалить из черного списка</button>
+      </div>
+
+      <div id="endpoint-actions" class="endpoint-actions" hidden>
+        <button id="allow-endpoint-button" type="button" hidden>Разблокировать эту страницу навсегда</button>
+        <button id="block-endpoint-button" type="button" hidden>Вернуть эту страницу под блокировку</button>
       </div>
 
       <div id="password-form" class="password-form" hidden>
